@@ -50,3 +50,130 @@ Step 7: Set Up Automated Reminders
 
 Step 8: Deploy the App
 
+Sumitra:  Modify APP.js  using the given code to implement geolocation:::
+
+import React, { useEffect, useState } from "react";
+import axios from "axios";
+
+function App() {
+  const [data, setData] = useState(null);
+
+  useEffect(() => {
+    axios.get("http://127.0.0.1:5000/api/data") // Backend URL
+      .then(response => setData(response.data.message))
+      .catch(error => console.error("Error fetching data:", error));
+  }, []);
+
+  return (
+    <div>
+      <h1>React + Python Backend</h1>
+      <p>{data ? data : "Loading..."}</p>
+    </div>
+  );
+}
+
+export default App;
+
+
+
+Your code may look like:
+
+
+
+import { useState, useEffect } from 'react';
+import './App.css';
+import ReminderList from './components/ReminderList';
+import AddReminder from './components/AddReminder';
+import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
+import 'leaflet/dist/leaflet.css';
+import axios from 'axios';
+
+function App() {
+  const [reminders, setReminders] = useState([]);
+  const [userLocation, setUserLocation] = useState({ lat: 51.505, lng: -0.09 }); // Default location
+
+  // Fetch user's location
+  useEffect(() => {
+    if ("geolocation" in navigator) {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          setUserLocation({
+            lat: position.coords.latitude,
+            lng: position.coords.longitude,
+          });
+        },
+        (error) => console.error("Geolocation error:", error)
+      );
+    }
+  }, []);
+
+  // Fetch reminders from backend
+  useEffect(() => {
+    axios.get("http://127.0.0.1:5000/api/reminders")
+      .then(response => setReminders(response.data))
+      .catch(error => console.error("Error fetching reminders:", error));
+  }, []);
+
+  // Add a reminder and send to backend
+  const addReminder = (reminder) => {
+    const newReminder = { ...reminder, location: userLocation };
+    setReminders([...reminders, newReminder]);
+
+    axios.post("http://127.0.0.1:5000/api/reminders", newReminder)
+      .catch(error => console.error("Error adding reminder:", error));
+  };
+
+  // Delete a reminder
+  const deleteReminder = (index) => {
+    const reminderToDelete = reminders[index];
+    setReminders(reminders.filter((_, i) => i !== index));
+
+    axios.delete(`http://127.0.0.1:5000/api/reminders/${reminderToDelete.id}`)
+      .catch(error => console.error("Error deleting reminder:", error));
+  };
+
+  // Snooze a reminder (Move to the end of the list)
+  const snoozeReminder = (index) => {
+    const snoozedReminder = reminders[index];
+    setReminders(reminders.filter((_, i) => i !== index).concat(snoozedReminder));
+  };
+
+  return (
+    <div className="App">
+      <h1>Geo Reminder App</h1>
+      <div className="icon-bar">
+        <button className="icon-button">
+          <i className="fas fa-plus"></i>
+        </button>
+        <button className="icon-button">
+          <i className="fas fa-map-marker-alt"></i>
+        </button>
+      </div>
+      <AddReminder addReminder={addReminder} />
+      <MapContainer center={[userLocation.lat, userLocation.lng]} zoom={13} id="map">
+        <TileLayer
+          url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+        />
+        {reminders.map((reminder, index) => (
+          <Marker key={index} position={[reminder.location.lat, reminder.location.lng]}>
+            <Popup>
+              {reminder.text}
+              <br />
+              <button className="snooze-button" onClick={() => snoozeReminder(index)}>
+                Snooze
+              </button>
+              <button className="delete-button" onClick={() => deleteReminder(index)}>
+                Delete
+              </button>
+            </Popup>
+          </Marker>
+        ))}
+      </MapContainer>
+      <ReminderList reminders={reminders} deleteReminder={deleteReminder} snoozeReminder={snoozeReminder} />
+    </div>
+  );
+}
+
+export default App;
+
