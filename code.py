@@ -3,6 +3,7 @@ from datetime import datetime
 from plyer import notification
 import geocoder
 
+# Get the user location by using their IP
 def get_location():
     try:
         location = geocoder.ip("me")
@@ -41,3 +42,5 @@ def set_reminder():
 
 # Run the reminder function
 set_reminder()
+
+
