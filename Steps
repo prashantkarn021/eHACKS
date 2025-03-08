@@ -50,7 +50,7 @@ Step 7: Set Up Automated Reminders
 
 Step 8: Deploy the App
 
-Sumitra:  Modify APP.js  using the given code to implement geolocation:::
+Sumitra:  Connect the frontend to backend using the code below::
 
 import React, { useEffect, useState } from "react";
 import axios from "axios";
