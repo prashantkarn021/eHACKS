@@ -5,10 +5,9 @@ import geocoder
 
 def get_location():
     try:
-        location = gps.get_location()
-        if location:
-            latitude = location.get("lat", "Unknown")
-            longitude = location.get("lon", "Unknown")
+        location = geocoder.ip("me")
+        if location and location.latlng:
+            latitude, longitude = location.latlng
             return f"Lat: {latitude}, Lon: {longitude}"
         else:
             return "Location not available"
